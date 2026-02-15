@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 SafeZone - Détection Temps Réel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6f1ff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 900;
+            color: #028090;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(2, 128, 144, 0.5);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #8892b0;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(2, 128, 144, 0.1);
+            border: 2px solid rgba(2, 200, 154, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #02c39a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Canvas Zone */
+        .canvas-container {
+            position: relative;
+            background: #0a192f;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 400px;
+        }
+
+        .canvas-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-safe { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-danger { 
+            background: #ef4444;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric-box {
+            background: rgba(2, 195, 154, 0.1);
+            border: 1px solid rgba(2, 195, 154, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #02c39a;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #8892b0;
+            text-transform: uppercase;
+        }
+
+        /* Event Log */
+        .event-log {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .event-item {
+            background: rgba(2, 128, 144, 0.05);
+            border-left: 3px solid;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .event-item.n1 { border-left-color: #64ffda; }
+        .event-item.n2 { border-left-color: #00b4d8; }
+        .event-item.n3 { border-left-color: #0077b6; }
+        .event-item.n4 { border-left-color: #023e8a; }
+        .event-item.n5 { border-left-color: #03045e; }
+
+        .event-time {
+            color: #64ffda;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .event-level {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .level-n1 { background: rgba(100, 255, 218, 0.2); color: #64ffda; }
+        .level-n2 { background: rgba(0, 180, 216, 0.2); color: #00b4d8; }
+        .level-n3 { background: rgba(0, 119, 182, 0.2); color: #0077b6; }
+        .level-n4 { background: rgba(2, 62, 138, 0.2); color: #023e8a; }
+        .level-n5 { background: rgba(3, 4, 94, 0.2); color: #03045e; }
+
+        /* Detections */
+        .detection-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .detection-item {
+            background: rgba(2, 195, 154, 0.05);
+            border: 1px solid rgba(2, 195, 154, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .detection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .detection-type {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .detection-type.safe { color: #10b981; }
+        .detection-type.warning { color: #f59e0b; }
+        .detection-type.danger { color: #ef4444; }
+
+        .confidence {
+            font-size: 12px;
+            color: #64ffda;
+        }
+
+        .detection-meta {
+            font-size: 12px;
+            color: #8892b0;
+        }
+
+        /* Architecture */
+        .architecture-levels {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .level-badge {
+            background: rgba(2, 128, 144, 0.1);
+            border: 1px solid;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .level-badge.active {
+            background: rgba(2, 195, 154, 0.2);
+            border-width: 2px;
+        }
+
+        .level-name {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .level-desc {
+            font-size: 11px;
+            color: #8892b0;
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            display: none;
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+            border: 2px solid #fee2e2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: flash 1s infinite;
+        }
+
+        .alert-banner.active {
+            display: block;
+        }
+
+        @keyframes flash {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.8; }
+        }
+
+        .alert-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .alert-message {
+            font-size: 16px;
+            color: #fecaca;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(2, 128, 144, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(2, 195, 154, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(2, 195, 154, 0.7);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #8892b0;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ AGENTICX5 SAFEZONE - DÉTECTION TEMPS RÉEL</h1>
+            <div class="subtitle">Système de Zone d'Exclusion Intelligent • Guide CNESST 2026</div>
+        </div>
+
+        <div id="alertBanner" class="alert-banner">
+            <div class="alert-title">⚠️ INTRUSION DÉTECTÉE - STOP WORK ACTIVÉ</div>
+            <div class="alert-message">Personne non autorisée dans zone d'exclusion • Équipements arrêtés • Superviseur notifié</div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Canvas -->
+                <div class="card">
+                    <h2>📹 Vue Caméra 4K - Quai A</h2>
+                    <div class="canvas-container">
+                        <canvas id="detectionCanvas"></canvas>
+                        <div class="canvas-overlay">
+                            <span class="status-indicator status-safe"></span>
+                            <span id="systemStatus">Système ACTIF • Surveillance Continue</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="card">
+                    <h2>📊 Métriques Temps Réel</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-box">
+                            <div class="metric-value" id="totalDetections">0</div>
+                            <div class="metric-label">Détections</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value" id="intrusions">0</div>
+                            <div class="metric-label">Intrusions</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value" id="stopWorks">0</div>
+                            <div class="metric-label">Stop-Work</div>
+                        </div>
+                        <div class="metric-box">
+                            <div class="metric-value" id="latency">45ms</div>
+                            <div class="metric-label">Latence</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Log -->
+                <div class="card">
+                    <h2>📝 Journal d'Événements</h2>
+                    <div class="event-log" id="eventLog"></div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div>
+                <!-- Active Detections -->
+                <div class="card">
+                    <h2>🎯 Détections Actives</h2>
+                    <div class="detection-list" id="detectionList"></div>
+                </div>
+
+                <!-- Architecture -->
+                <div class="card">
+                    <h2>🏗️ Architecture AgenticX5</h2>
+                    <div class="architecture-levels">
+                        <div class="level-badge level-n5" style="border-color: #03045e;">
+                            <div class="level-name" style="color: #03045e;">N5 - Orchestration</div>
+                            <div class="level-desc">MCP Hub • Workflows automatisés</div>
+                        </div>
+                        <div class="level-badge level-n4" style="border-color: #023e8a;">
+                            <div class="level-name" style="color: #023e8a;">N4 - Recommandation</div>
+                            <div class="level-desc">Plans auto • XAI • Scoring ELON</div>
+                        </div>
+                        <div class="level-badge level-n3 active" style="border-color: #0077b6;">
+                            <div class="level-name" style="color: #0077b6;">N3 - Analyse IA</div>
+                            <div class="level-desc">YOLOv8 • Détection <50ms</div>
+                        </div>
+                        <div class="level-badge level-n2" style="border-color: #00b4d8;">
+                            <div class="level-name" style="color: #00b4d8;">N2 - Normalisation</div>
+                            <div class="level-desc">Pipeline vision • PostgreSQL</div>
+                        </div>
+                        <div class="level-badge level-n1 active" style="border-color: #64ffda;">
+                            <div class="level-name" style="color: #64ffda;">N1 - Collecte</div>
+                            <div class="level-desc">Caméras • IoT • Capteurs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            AgenticX5 SafeZone • GenAISafety × Preventera × SquadrAI Hugo • © 2026
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('detectionCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 400;
+
+        // State
+        let detections = 0;
+        let intrusions = 0;
+        let stopWorks = 0;
+        let eventId = 0;
+
+        // Objects
+        const truck = { x: 600, y: 200, width: 150, height: 100 };
+        const forklift = { x: 300, y: 250, width: 80, height: 60 };
+        const exclusionZone = { x: 400, y: 150, radius: 120 };
+        let persons = [];
+
+        // Add person
+        function addPerson() {
+            const person = {
+                x: Math.random() * 700 + 50,
+                y: Math.random() * 300 + 50,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                type: Math.random() > 0.7 ? 'unauthorized' : 'operator',
+                id: Date.now() + Math.random()
+            };
+            persons.push(person);
+        }
+
+        // Draw
+        function draw() {
+            ctx.fillStyle = '#0a192f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Exclusion zone
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([10, 5]);
+            ctx.beginPath();
+            ctx.arc(exclusionZone.x, exclusionZone.y, exclusionZone.radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Truck
+            ctx.fillStyle = '#64ffda';
+            ctx.fillRect(truck.x, truck.y, truck.width, truck.height);
+            ctx.fillStyle = '#0a192f';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('REMORQUE', truck.x + 30, truck.y + 55);
+
+            // Forklift
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(forklift.x, forklift.y, forklift.width, forklift.height);
+            ctx.fillStyle = '#0a192f';
+            ctx.fillText('CHARIOT', forklift.x + 10, forklift.y + 35);
+
+            // Persons
+            persons.forEach(person => {
+                const inZone = Math.hypot(person.x - exclusionZone.x, person.y - exclusionZone.y) < exclusionZone.radius;
+                
+                ctx.fillStyle = person.type === 'unauthorized' ? '#ef4444' : '#10b981';
+                ctx.beginPath();
+                ctx.arc(person.x, person.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (inZone && person.type === 'unauthorized') {
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(person.x, person.y, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = 'white';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(person.type === 'unauthorized' ? '👤' : '👷', person.x - 8, person.y + 4);
+            });
+        }
+
+        // Update
+        function update() {
+            persons.forEach(person => {
+                person.x += person.vx;
+                person.y += person.vy;
+
+                if (person.x < 20 || person.x > 780) person.vx *= -1;
+                if (person.y < 20 || person.y > 380) person.vy *= -1;
+
+                const inZone = Math.hypot(person.x - exclusionZone.x, person.y - exclusionZone.y) < exclusionZone.radius;
+                
+                if (inZone && person.type === 'unauthorized' && !person.alerted) {
+                    person.alerted = true;
+                    triggerIntrusion(person);
+                }
+            });
+
+            persons = persons.filter(p => !p.remove);
+        }
+
+        // Trigger intrusion
+        function triggerIntrusion(person) {
+            intrusions++;
+            stopWorks++;
+            document.getElementById('intrusions').textContent = intrusions;
+            document.getElementById('stopWorks').textContent = stopWorks;
+            
+            const alertBanner = document.getElementById('alertBanner');
+            alertBanner.classList.add('active');
+            
+            const statusIndicator = document.querySelector('.status-indicator');
+            statusIndicator.className = 'status-indicator status-danger';
+            document.getElementById('systemStatus').textContent = 'ALERTE INTRUSION • STOP-WORK ACTIF';
+
+            addEvent('N5', 'STOP_WORK déclenché - Intrusion détectée', 'danger');
+            addEvent('N3', `Person_unauthorized détecté (97% confiance)`, 'warning');
+            addEvent('N4', 'Scoring ELON = 9.2/10 → CRITIQUE', 'warning');
+            
+            addDetection('INTRUSION CRITIQUE', 'danger', 97);
+
+            setTimeout(() => {
+                person.remove = true;
+                alertBanner.classList.remove('active');
+                statusIndicator.className = 'status-indicator status-safe';
+                document.getElementById('systemStatus').textContent = 'Système ACTIF • Surveillance Continue';
+                addEvent('N5', 'Zone sécurisée - Reprise autorisée', 'safe');
+            }, 3000);
+        }
+
+        // Add event
+        function addEvent(level, message, type) {
+            const eventLog = document.getElementById('eventLog');
+            const event = document.createElement('div');
+            event.className = `event-item n${level.charAt(1)}`;
+            const now = new Date();
+            const time = now.toLocaleTimeString('fr-CA', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            event.innerHTML = `
+                <div class="event-time">${time}.${now.getMilliseconds()}</div>
+                <span class="event-level level-n${level.charAt(1)}">${level}</span>
+                ${message}
+            `;
+            
+            eventLog.insertBefore(event, eventLog.firstChild);
+            
+            if (eventLog.children.length > 10) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // Add detection
+        function addDetection(type, severity, confidence) {
+            detections++;
+            document.getElementById('totalDetections').textContent = detections;
+            
+            const detectionList = document.getElementById('detectionList');
+            const detection = document.createElement('div');
+            detection.className = 'detection-item';
+            const now = new Date();
+            const time = now.toLocaleTimeString('fr-CA', { hour12: false });
+            
+            detection.innerHTML = `
+                <div class="detection-header">
+                    <div class="detection-type ${severity}">${type}</div>
+                    <div class="confidence">${confidence}%</div>
+                </div>
+                <div class="detection-meta">
+                    ${time} • Position: Zone exclusion • Action: Stop-work
+                </div>
+            `;
+            
+            detectionList.insertBefore(detection, detectionList.firstChild);
+            
+            if (detectionList.children.length > 5) {
+                detectionList.removeChild(detectionList.lastChild);
+            }
+
+            setTimeout(() => {
+                detection.style.opacity = '0';
+                setTimeout(() => detection.remove(), 500);
+            }, 5000);
+        }
+
+        // Auto detection
+        setInterval(() => {
+            const latency = Math.floor(Math.random() * 20) + 35;
+            document.getElementById('latency').textContent = latency + 'ms';
+            
+            if (Math.random() > 0.7) {
+                const types = ['Opérateur autorisé', 'Chariot en mouvement', 'Remorque positionnée'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const conf = Math.floor(Math.random() * 10) + 90;
+                addEvent('N3', `Détection: ${type} (${conf}%)`, 'safe');
+            }
+        }, 2000);
+
+        // Animation loop
+        function animate() {
+            update();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => addPerson(), i * 1000);
+        }
+
+        setInterval(() => {
+            if (persons.length < 5) addPerson();
+        }, 5000);
+
+        addEvent('N1', 'Caméras 4K initialisées (25fps)', 'safe');
+        addEvent('N2', 'Pipeline YOLOv8 opérationnel', 'safe');
+        addEvent('N3', 'Modèle détection chargé (95% précision)', 'safe');
+        addEvent('N5', 'Système SafeZone ACTIF', 'safe');
+
+        animate();
+    </script>
+</body>
+</html>

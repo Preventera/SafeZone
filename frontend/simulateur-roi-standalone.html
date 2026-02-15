@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 - Simulateur ROI</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid #334155;
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { font-size: 24px; font-weight: 800; color: #e0e7ff; }
+        .text-accent { color: #10b981; }
+        .nav-tabs { display: flex; gap: 20px; }
+        .nav-link { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 4px; }
+        .nav-link.active { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        h1 { 
+            text-align: center; 
+            font-size: 36px; 
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 32px;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e0e7ff;
+            margin-bottom: 24px;
+        }
+
+        .slider-group {
+            margin-bottom: 28px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 8px;
+        }
+
+        .slider-value {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.5) 0%, rgba(30, 41, 59, 0.5) 100%);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value-large {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .metric-value-large.positive { color: #10b981; }
+        .metric-value-large.negative { color: #ef4444; }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #e0e7ff;
+        }
+
+        .metric-value.positive { color: #10b981; }
+        .metric-value.negative { color: #ef4444; }
+
+        .metric-subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.3) 100%);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e0e7ff;
+            margin-bottom: 20px;
+        }
+
+        .disclaimer {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .breakdown-item {
+            background: rgba(51, 65, 85, 0.4);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+        }
+
+        .icon-value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .icon {
+            font-size: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Simulateur <span class="text-accent">ROI</span></div>
+        <nav class="nav-tabs">
+            <a href="dashboard-global-standalone.html" class="nav-link">🌐 Global</a>
+            <a href="demo-safezone-temps-reel-standalone.html" class="nav-link">🛡️ SafeZone</a>
+            <a href="demo-generateur-plans-cnesst-standalone.html" class="nav-link">📋 Plans</a>
+            <a href="formation-vr-standalone.html" class="nav-link">🎓 Formation</a>
+            <a href="simulateur-roi-standalone.html" class="nav-link active">💰 ROI</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1>💰 SIMULATEUR ROI AGENTICX5</h1>
+        <div class="subtitle">Projection Retour sur Investissement • Zones Exclusion CNESST 2026</div>
+
+        <div class="main-grid">
+            <!-- Left Panel: Parameters -->
+            <div class="panel">
+                <div class="panel-title">⚙️ Paramètres Projection</div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Nombre de sites équipés</span>
+                        <span class="slider-value"><span id="sitesValue">5</span> sites</span>
+                    </div>
+                    <input type="range" id="sites" min="1" max="100" value="5" oninput="updateValue('sites')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Accidents graves/an (baseline)</span>
+                        <span class="slider-value"><span id="accidentsValue">15</span> /an</span>
+                    </div>
+                    <input type="range" id="accidents" min="0" max="20" value="15" oninput="updateValue('accidents')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Coût moyen accident</span>
+                        <span class="slider-value"><span id="costValue">500</span>K$ CAD</span>
+                    </div>
+                    <input type="range" id="cost" min="100" max="1000" value="500" step="50" oninput="updateValue('cost')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Réduction accidents cible</span>
+                        <span class="slider-value"><span id="reductionValue">90</span>%</span>
+                    </div>
+                    <input type="range" id="reduction" min="50" max="95" value="90" step="5" oninput="updateValue('reduction')">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Période projection</span>
+                        <span class="slider-value"><span id="yearsValue">3</span> ans</span>
+                    </div>
+                    <input type="range" id="years" min="1" max="5" value="3" oninput="updateValue('years')">
+                </div>
+
+                <button class="btn-calculate" onclick="calculateROI()">📊 Calculer ROI</button>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="panel">
+                <div class="panel-title">📈 Résultats Projection</div>
+
+                <div id="placeholderResults" style="text-align: center; padding: 80px 20px; color: #64748b;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                    <div style="font-size: 18px;">Ajustez les paramètres et cliquez sur "Calculer ROI"</div>
+                    <div style="font-size: 14px; margin-top: 8px;">Les projections apparaîtront ici</div>
+                </div>
+
+                <div id="resultsContainer" class="results-container">
+                    <!-- ROI Total -->
+                    <div class="metric-card" style="border: 2px solid #10b981;">
+                        <div class="metric-label">ROI Total</div>
+                        <div class="metric-value-large positive"><span id="roiTotal">0</span>%</div>
+                        <div class="metric-subtitle">Sur <span id="periodText">3</span> ans</div>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="breakdown-grid">
+                        <div class="breakdown-item">
+                            <div class="metric-label">Investissement Total</div>
+                            <div class="icon-value">
+                                <span class="icon">💸</span>
+                                <div class="metric-value negative"><span id="investment">0</span>M$</div>
+                            </div>
+                            <div class="metric-subtitle">POC + MVP + Production</div>
+                        </div>
+
+                        <div class="breakdown-item">
+                            <div class="metric-label">Retours Totaux</div>
+                            <div class="icon-value">
+                                <span class="icon">💰</span>
+                                <div class="metric-value positive"><span id="returns">0</span>M$</div>
+                            </div>
+                            <div class="metric-subtitle">Économies + Gains + SaaS</div>
+                        </div>
+
+                        <div class="breakdown-item">
+                            <div class="metric-label">Économies Accidents</div>
+                            <div class="icon-value">
+                                <span class="icon">🛡️</span>
+                                <div class="metric-value positive"><span id="savings">0</span>M$</div>
+                            </div>
+                            <div class="metric-subtitle"><span id="accidentsPrevented">0</span> accidents évités</div>
+                        </div>
+
+                        <div class="breakdown-item">
+                            <div class="metric-label">Gains Productivité</div>
+                            <div class="icon-value">
+                                <span class="icon">⚡</span>
+                                <div class="metric-value positive"><span id="productivity">0</span>K$</div>
+                            </div>
+                            <div class="metric-subtitle">28h/mois économisées</div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Metrics -->
+                    <div class="breakdown-grid">
+                        <div class="breakdown-item">
+                            <div class="metric-label">Payback Period</div>
+                            <div class="icon-value">
+                                <span class="icon">⏱️</span>
+                                <div class="metric-value" style="color: #f59e0b;"><span id="payback">0</span> mois</div>
+                            </div>
+                            <div class="metric-subtitle">Temps jusqu'à break-even</div>
+                        </div>
+
+                        <div class="breakdown-item">
+                            <div class="metric-label">Vies Sauvées (estimé)</div>
+                            <div class="icon-value">
+                                <span class="icon">❤️</span>
+                                <div class="metric-value" style="color: #3b82f6;"><span id="lives">0</span> personnes</div>
+                            </div>
+                            <div class="metric-subtitle">Impact humain direct</div>
+                        </div>
+                    </div>
+
+                    <!-- Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">📊 Évolution Cumulative (3 ans)</div>
+                        <canvas id="roiChart" width="800" height="250"></canvas>
+                    </div>
+
+                    <!-- Disclaimer -->
+                    <div class="disclaimer">
+                        <strong>📌 Note importante:</strong> Projections basées sur moyennes sectorielles CNESST 2018-2023. ROI réel peut varier selon contexte opérationnel, taille organisation, complexité sites, et maturité SST actuelle. Consultez un expert AgenticX5 pour évaluation personnalisée.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateValue(id) {
+            const value = document.getElementById(id).value;
+            document.getElementById(id + 'Value').textContent = value;
+        }
+
+        function calculateROI() {
+            const sites = parseInt(document.getElementById('sites').value);
+            const accidentsBaseline = parseInt(document.getElementById('accidents').value);
+            const costAccident = parseInt(document.getElementById('cost').value);
+            const reductionPct = parseInt(document.getElementById('reduction').value) / 100;
+            const years = parseInt(document.getElementById('years').value);
+
+            // Calculs
+            const investmentPerSite = 1.438; // M$ (POC + MVP + Prod réparti sur 50 sites baseline)
+            const totalInvestment = (sites * investmentPerSite / 50);
+
+            const accidentsPrevented = Math.round(accidentsBaseline * reductionPct * years);
+            const savingsAccidents = (accidentsPrevented * costAccident) / 1000; // En M$
+
+            const productivityGains = (sites * 28 * 12 * 75 * years) / 1000000; // 28h/mois, 75$/h
+            
+            const saasMult = Math.min(years / 3, 1); // Revenus SaaS progressifs
+            const saasRevenue = (sites * 0.06 * 12 * years * saasMult); // 5K$/mois = 0.06M$/an
+
+            const totalReturns = savingsAccidents + productivityGains + saasRevenue;
+            const roi = ((totalReturns - totalInvestment) / totalInvestment * 100);
+
+            const monthlyReturn = totalReturns / (years * 12);
+            const monthlyCost = totalInvestment / (years * 12);
+            const paybackMonths = Math.ceil(totalInvestment / monthlyReturn);
+
+            const livesSaved = Math.round(accidentsPrevented * 0.15); // 15% des accidents graves = décès
+
+            // Update UI
+            document.getElementById('placeholderResults').style.display = 'none';
+            document.getElementById('resultsContainer').classList.add('active');
+
+            document.getElementById('roiTotal').textContent = roi.toFixed(0);
+            document.getElementById('periodText').textContent = years;
+            document.getElementById('investment').textContent = totalInvestment.toFixed(2);
+            document.getElementById('returns').textContent = totalReturns.toFixed(2);
+            document.getElementById('savings').textContent = savingsAccidents.toFixed(2);
+            document.getElementById('accidentsPrevented').textContent = accidentsPrevented;
+            document.getElementById('productivity').textContent = (productivityGains * 1000).toFixed(0);
+            document.getElementById('payback').textContent = Math.min(paybackMonths, years * 12);
+            document.getElementById('lives').textContent = livesSaved;
+
+            // Chart
+            drawChart(years, totalInvestment, savingsAccidents, productivityGains, saasRevenue);
+        }
+
+        function drawChart(years, investment, savings, prod, saas) {
+            const canvas = document.getElementById('roiChart');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const width = 800;
+            const height = 250;
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+
+            // Background
+            ctx.fillStyle = 'rgba(51, 65, 85, 0.2)';
+            ctx.fillRect(padding, padding, chartWidth, chartHeight);
+
+            // Axes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // Data
+            const yearWidth = chartWidth / years;
+            
+            const dataInvest = [];
+            const dataReturns = [];
+            
+            for (let y = 0; y <= years; y++) {
+                const fraction = y / years;
+                dataInvest.push(investment * fraction);
+                dataReturns.push((savings + prod + saas) * fraction);
+            }
+
+            const maxValue = Math.max(...dataInvest, ...dataReturns);
+            const scale = chartHeight / (maxValue * 1.1);
+
+            // Draw bars
+            for (let y = 1; y <= years; y++) {
+                const x = padding + (y - 0.5) * yearWidth;
+                
+                // Investment (red)
+                const investHeight = dataInvest[y] * scale;
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+                ctx.fillRect(x - yearWidth * 0.18, height - padding - investHeight, yearWidth * 0.35, investHeight);
+
+                // Returns (green)
+                const returnsHeight = dataReturns[y] * scale;
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+                ctx.fillRect(x + yearWidth * 0.02, height - padding - returnsHeight, yearWidth * 0.35, returnsHeight);
+
+                // Labels
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Année ${y}`, x, height - padding + 20);
+            }
+
+            // Legend
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(padding, 10, 15, 15);
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Investissement cumulé', padding + 20, 22);
+
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(padding + 180, 10, 15, 15);
+            ctx.fillText('Retours cumulés', padding + 200, 22);
+
+            // Break-even line
+            const breakEvenY = height - padding - (investment * scale);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, breakEvenY);
+            ctx.lineTo(width - padding, breakEvenY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = '11px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('Break-even', width - padding - 5, breakEvenY - 5);
+        }
+    </script>
+</body>
+</html>

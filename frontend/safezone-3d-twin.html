@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 - SafeZone 3D Twin</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 1px solid #334155;
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        .logo { font-size: 24px; font-weight: 800; color: #e0e7ff; }
+        .text-accent { color: #ef4444; }
+        .nav-tabs { display: flex; gap: 20px; }
+        .nav-link { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 600; padding: 8px 12px; border-radius: 4px; transition: all 0.2s; }
+        .nav-link.active { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .nav-link:hover { color: #ef4444; }
+
+        .badge-live {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            height: calc(100vh - 140px);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .viewport-container {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .viewport-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .minimap {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #334155;
+            border-radius: 8px;
+        }
+
+        .control-panel {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e0e7ff;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(51, 65, 85, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .checkbox-item:hover {
+            background: rgba(51, 65, 85, 0.5);
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .checkbox-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: rgba(51, 65, 85, 0.4);
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+        }
+        .stat-card.danger { border-left-color: #ef4444; }
+        .stat-card.success { border-left-color: #10b981; }
+        .stat-card.warning { border-left-color: #f59e0b; }
+
+        .stat-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #e0e7ff;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+        .action-btn.secondary {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        }
+        .action-btn.success {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .timeline-container {
+            background: rgba(15, 23, 42, 0.95);
+            border-top: 1px solid #334155;
+            padding: 16px 20px;
+            height: 70px;
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .playback-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .playback-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+        }
+
+        .timeline-slider {
+            flex: 1;
+            height: 6px;
+            background: #334155;
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+            width: 35%;
+            position: relative;
+        }
+        .timeline-thumb {
+            position: absolute;
+            right: -8px;
+            top: -5px;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .timeline-time {
+            font-family: monospace;
+            font-size: 13px;
+            color: #94a3b8;
+            min-width: 150px;
+            text-align: right;
+        }
+
+        .alert-banner {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 0 0 12px 12px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+        .alert-banner.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .control-panel {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="alert-banner" id="alertBanner">
+        ⚠️ INTRUSION DÉTECTÉE - Zone Exclusion A12 - Stop Work Activé
+    </div>
+
+    <header>
+        <div class="logo">SafeZone <span class="text-accent">3D Twin</span></div>
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-link">🏠 Hub</a>
+            <a href="dashboard-global-standalone.html" class="nav-link">🌐 Global</a>
+            <a href="safezone-detection-standalone.html" class="nav-link">🛡️ SafeZone 2D</a>
+            <a href="safezone-3d-twin.html" class="nav-link active">🗺️ SafeZone 3D</a>
+            <a href="generateur-plans-cnesst-standalone.html" class="nav-link">📋 Plans</a>
+            <a href="formation-vr-standalone.html" class="nav-link">🎓 Formation</a>
+            <a href="simulateur-roi-standalone.html" class="nav-link">💰 ROI</a>
+        </nav>
+        <div class="badge-live">
+            <div class="pulse-dot"></div>
+            <span style="color: #10b981; font-weight: 600; font-size: 13px;">GPS LIVE</span>
+        </div>
+    </header>
+
+    <div class="main-grid">
+        <div class="viewport-container">
+            <canvas id="canvas3d"></canvas>
+            
+            <div class="viewport-overlay">
+                <div style="font-weight: 700; margin-bottom: 4px; color: #ef4444;">🏭 SITE: Usine Val-des-Sources</div>
+                <div style="font-size: 12px; color: #94a3b8;">Coordonnées: 45.7512°N, 71.9408°W</div>
+            </div>
+
+            <div class="legend">
+                <div style="font-weight: 700; margin-bottom: 10px; color: #e0e7ff;">Légende</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ef4444;"></div>
+                    <span>Zone Exclusion</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #10b981;"></div>
+                    <span>Travailleur Autorisé</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <span>Véhicule (Chariot)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>Remorque</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #8b5cf6;"></div>
+                    <span>Capteur IoT</span>
+                </div>
+            </div>
+
+            <div class="minimap">
+                <canvas id="minimapCanvas" width="150" height="150"></canvas>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="panel-section">
+                <div class="section-title">🎛️ Filtres Affichage</div>
+                <div class="filter-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showZones" checked>
+                        <label for="showZones">Zones d'exclusion</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showWorkers" checked>
+                        <label for="showWorkers">Travailleurs (GPS)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showVehicles" checked>
+                        <label for="showVehicles">Véhicules</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showSensors" checked>
+                        <label for="showSensors">Capteurs IoT</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="showHeatmap">
+                        <label for="showHeatmap">Heatmap Risques</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">📊 Statistiques Live</div>
+                <div class="stats-grid">
+                    <div class="stat-card danger">
+                        <div class="stat-label">Intrusions</div>
+                        <div class="stat-value"><span id="intrusionCount">0</span></div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-label">Travailleurs</div>
+                        <div class="stat-value"><span id="workerCount">24</span></div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-label">Véhicules</div>
+                        <div class="stat-value"><span id="vehicleCount">5</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Zones Actives</div>
+                        <div class="stat-value"><span id="zoneCount">3</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">🔗 Actions Rapides</div>
+                <button class="action-btn" onclick="window.location.href='generateur-plans-cnesst-standalone.html'">
+                    📋 Générer Plan CNESST
+                </button>
+                <button class="action-btn secondary" onclick="window.location.href='formation-vr-standalone.html'">
+                    🎓 Créer Scénario VR
+                </button>
+                <button class="action-btn success" onclick="exportReport()">
+                    📄 Export Rapport PDF
+                </button>
+            </div>
+
+            <div class="panel-section">
+                <div class="section-title">⚙️ Vue Caméra</div>
+                <div class="filter-group">
+                    <button class="action-btn" onclick="setView('iso')" style="margin: 0;">Vue Isométrique</button>
+                    <button class="action-btn" onclick="setView('top')" style="margin: 0; margin-top: 8px;">Vue Aérienne</button>
+                    <button class="action-btn" onclick="setView('side')" style="margin: 0; margin-top: 8px;">Vue Latérale</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="timeline-container">
+        <div class="timeline-controls">
+            <button class="playback-btn" onclick="playbackControl('backward')">◀️</button>
+            <button class="playback-btn" onclick="playbackControl('play')" id="playBtn">⏸️</button>
+            <button class="playback-btn" onclick="playbackControl('forward')">▶️</button>
+            <div class="timeline-slider">
+                <div class="timeline-progress">
+                    <div class="timeline-thumb"></div>
+                </div>
+            </div>
+            <div class="timeline-time" id="timeDisplay">15/02/2026 13:45:30</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Three.js Scene Setup
+        let scene, camera, renderer, controls;
+        let zones = [], workers = [], vehicles = [], sensors = [];
+        let isPlaying = true;
+        let intrusionCount = 0;
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.Fog(0x0f172a, 50, 200);
+
+            // Camera (Isometric style)
+            const aspect = window.innerWidth / window.innerHeight;
+            camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
+            camera.position.set(40, 40, 40);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            const canvas = document.getElementById('canvas3d');
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.shadowMap.enabled = true;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(20, 30, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Ground Plane
+            const groundGeometry = new THREE.PlaneGeometry(100, 100);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1e293b,
+                roughness: 0.8 
+            });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Grid Helper
+            const gridHelper = new THREE.GridHelper(100, 50, 0x334155, 0x1e293b);
+            scene.add(gridHelper);
+
+            // Create Scene Objects
+            createExclusionZones();
+            createWorkers();
+            createVehicles();
+            createSensors();
+            createBuildings();
+
+            // Animation
+            animate();
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Simulate intrusion after 5 seconds
+            setTimeout(simulateIntrusion, 5000);
+        }
+
+        function createExclusionZones() {
+            // Zone 1: Main exclusion zone (red cylinder)
+            const zone1 = new THREE.Mesh(
+                new THREE.CylinderGeometry(8, 8, 0.5, 32),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0xef4444, 
+                    transparent: true, 
+                    opacity: 0.3,
+                    emissive: 0xef4444,
+                    emissiveIntensity: 0.2
+                })
+            );
+            zone1.position.set(0, 0.25, 0);
+            scene.add(zone1);
+            zones.push(zone1);
+
+            // Zone border (dashed line effect via multiple thin cylinders)
+            for (let i = 0; i < 32; i++) {
+                if (i % 2 === 0) continue;
+                const angle = (i / 32) * Math.PI * 2;
+                const x = Math.cos(angle) * 8;
+                const z = Math.sin(angle) * 8;
+                const border = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.3, 0.7, 0.3),
+                    new THREE.MeshStandardMaterial({ color: 0xef4444 })
+                );
+                border.position.set(x, 0.35, z);
+                scene.add(border);
+            }
+
+            // Zone 2: Secondary zone
+            const zone2 = new THREE.Mesh(
+                new THREE.CylinderGeometry(5, 5, 0.5, 32),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0xf59e0b, 
+                    transparent: true, 
+                    opacity: 0.2,
+                    emissive: 0xf59e0b,
+                    emissiveIntensity: 0.1
+                })
+            );
+            zone2.position.set(20, 0.25, -15);
+            scene.add(zone2);
+            zones.push(zone2);
+        }
+
+        function createWorkers() {
+            for (let i = 0; i < 8; i++) {
+                const worker = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.6, 16, 16),
+                    new THREE.MeshStandardMaterial({ 
+                        color: 0x10b981,
+                        emissive: 0x10b981,
+                        emissiveIntensity: 0.3
+                    })
+                );
+                
+                // Random positions (outside exclusion zones)
+                const angle = (i / 8) * Math.PI * 2;
+                worker.position.set(
+                    Math.cos(angle) * 15 + (Math.random() - 0.5) * 10,
+                    0.6,
+                    Math.sin(angle) * 15 + (Math.random() - 0.5) * 10
+                );
+                
+                worker.castShadow = true;
+                scene.add(worker);
+                workers.push({
+                    mesh: worker,
+                    velocity: new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        0,
+                        (Math.random() - 0.5) * 0.02
+                    )
+                });
+            }
+        }
+
+        function createVehicles() {
+            // Forklift 1
+            const forklift1 = new THREE.Mesh(
+                new THREE.BoxGeometry(2, 1.5, 3),
+                new THREE.MeshStandardMaterial({ color: 0xf59e0b })
+            );
+            forklift1.position.set(-15, 0.75, 10);
+            forklift1.castShadow = true;
+            scene.add(forklift1);
+            vehicles.push({ mesh: forklift1, velocity: new THREE.Vector3(0.03, 0, 0) });
+
+            // Trailer
+            const trailer = new THREE.Mesh(
+                new THREE.BoxGeometry(4, 2, 8),
+                new THREE.MeshStandardMaterial({ color: 0x3b82f6 })
+            );
+            trailer.position.set(12, 1, 5);
+            trailer.castShadow = true;
+            scene.add(trailer);
+            vehicles.push({ mesh: trailer, velocity: new THREE.Vector3(0, 0, 0) });
+        }
+
+        function createSensors() {
+            const positions = [
+                [10, 3, 10],
+                [-10, 3, 10],
+                [10, 3, -10],
+                [-10, 3, -10]
+            ];
+
+            positions.forEach(pos => {
+                const sensor = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.5, 0.5, 0.5),
+                    new THREE.MeshStandardMaterial({ 
+                        color: 0x8b5cf6,
+                        emissive: 0x8b5cf6,
+                        emissiveIntensity: 0.5
+                    })
+                );
+                sensor.position.set(...pos);
+                scene.add(sensor);
+                sensors.push(sensor);
+            });
+        }
+
+        function createBuildings() {
+            // Warehouse
+            const building = new THREE.Mesh(
+                new THREE.BoxGeometry(15, 6, 10),
+                new THREE.MeshStandardMaterial({ color: 0x475569 })
+            );
+            building.position.set(-25, 3, -20);
+            building.castShadow = true;
+            scene.add(building);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isPlaying) {
+                // Animate workers
+                workers.forEach(worker => {
+                    worker.mesh.position.add(worker.velocity);
+                    
+                    // Boundary check
+                    if (Math.abs(worker.mesh.position.x) > 40) worker.velocity.x *= -1;
+                    if (Math.abs(worker.mesh.position.z) > 40) worker.velocity.z *= -1;
+                    
+                    // Bob animation
+                    worker.mesh.position.y = 0.6 + Math.sin(Date.now() * 0.005) * 0.1;
+                });
+
+                // Animate vehicles
+                vehicles.forEach(vehicle => {
+                    vehicle.mesh.position.add(vehicle.velocity);
+                    if (Math.abs(vehicle.mesh.position.x) > 40) vehicle.velocity.x *= -1;
+                });
+
+                // Animate sensors (pulse)
+                sensors.forEach((sensor, i) => {
+                    sensor.scale.setScalar(1 + Math.sin(Date.now() * 0.003 + i) * 0.2);
+                });
+
+                // Update time
+                updateTime();
+            }
+
+            // Rotate camera slightly
+            camera.position.x = Math.cos(Date.now() * 0.0001) * 45;
+            camera.position.z = Math.sin(Date.now() * 0.0001) * 45;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+            drawMinimap();
+        }
+
+        function drawMinimap() {
+            const canvas = document.getElementById('minimapCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, 150, 150);
+
+            // Grid
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 150; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 150);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(150, i);
+                ctx.stroke();
+            }
+
+            // Zones
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+            ctx.beginPath();
+            ctx.arc(75, 75, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Workers
+            workers.forEach(worker => {
+                const x = 75 + worker.mesh.position.x * 1.5;
+                const z = 75 + worker.mesh.position.z * 1.5;
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(x, z, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Vehicles
+            vehicles.forEach(vehicle => {
+                const x = 75 + vehicle.mesh.position.x * 1.5;
+                const z = 75 + vehicle.mesh.position.z * 1.5;
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(x - 3, z - 3, 6, 6);
+            });
+        }
+
+        function simulateIntrusion() {
+            // Move a worker into exclusion zone
+            if (workers.length > 0) {
+                workers[0].mesh.material.color.setHex(0xef4444);
+                workers[0].velocity = new THREE.Vector3(0.05, 0, 0.05);
+                
+                // Show alert
+                const banner = document.getElementById('alertBanner');
+                banner.classList.add('active');
+                intrusionCount++;
+                document.getElementById('intrusionCount').textContent = intrusionCount;
+                
+                setTimeout(() => {
+                    banner.classList.remove('active');
+                    workers[0].mesh.material.color.setHex(0x10b981);
+                    workers[0].velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.02,
+                        0,
+                        (Math.random() - 0.5) * 0.02
+                    );
+                }, 3000);
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const formatted = now.toLocaleString('fr-CA', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('timeDisplay').textContent = formatted;
+        }
+
+        function playbackControl(action) {
+            if (action === 'play') {
+                isPlaying = !isPlaying;
+                document.getElementById('playBtn').textContent = isPlaying ? '⏸️' : '▶️';
+            }
+        }
+
+        function setView(view) {
+            if (view === 'iso') {
+                camera.position.set(40, 40, 40);
+            } else if (view === 'top') {
+                camera.position.set(0, 80, 0);
+            } else if (view === 'side') {
+                camera.position.set(60, 20, 0);
+            }
+            camera.lookAt(0, 0, 0);
+        }
+
+        function exportReport() {
+            alert('Export rapport PDF - Fonctionnalité en développement\n\nContiendra:\n• Carte 3D snapshot\n• Historique intrusions 24h\n• Liste travailleurs présents\n• Conformité CNESST 2026');
+        }
+
+        function onWindowResize() {
+            const canvas = document.getElementById('canvas3d');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        }
+
+        // Event listeners
+        document.getElementById('showZones').addEventListener('change', (e) => {
+            zones.forEach(zone => zone.visible = e.target.checked);
+        });
+
+        document.getElementById('showWorkers').addEventListener('change', (e) => {
+            workers.forEach(worker => worker.mesh.visible = e.target.checked);
+        });
+
+        document.getElementById('showVehicles').addEventListener('change', (e) => {
+            vehicles.forEach(vehicle => vehicle.mesh.visible = e.target.checked);
+        });
+
+        document.getElementById('showSensors').addEventListener('change', (e) => {
+            sensors.forEach(sensor => sensor.visible = e.target.checked);
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

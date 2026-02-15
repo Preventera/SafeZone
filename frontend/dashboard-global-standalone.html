@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 - Dashboard Global HSE</title>
+    <style>
+        /* RESET & BASE */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0a192f;
+            color: #8892b0;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* UTILS */
+        .text-accent { color: #64ffda; }
+        .text-white { color: #e6f1ff; }
+        .text-alert { color: #ef4444; }
+        .text-warning { color: #f59e0b; }
+        .bg-dark { background-color: #112240; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .flex { display: flex; }
+        .grid { display: grid; }
+        .hidden { display: none; }
+        
+        /* LAYOUT */
+        header {
+            background: rgba(10, 25, 47, 0.95);
+            border-bottom: 1px solid #233554;
+            padding: 0 2rem;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+
+        /* COMPONENTS */
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-live {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #64ffda;
+            font-weight: 600;
+            font-size: 14px;
+            background: rgba(100, 255, 218, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(100, 255, 218, 0.2);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #64ffda;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(100, 255, 218, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(100, 255, 218, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(100, 255, 218, 0); }
+        }
+
+        /* NAVIGATION */
+        .nav-tabs { display: flex; gap: 20px; }
+        .nav-link {
+            color: #8892b0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #64ffda;
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        /* METRICS */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #112240;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.7);
+            border: 1px solid transparent;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover { transform: translateY(-2px); border-color: #64ffda; }
+
+        .metric-value { font-size: 28px; font-weight: 700; color: #e6f1ff; }
+        .metric-label { font-size: 12px; color: #64ffda; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* SIDEBAR ARCHITECTURE */
+        .sidebar { overflow-y: auto; padding-right: 10px; }
+        .level-item {
+            position: relative;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #112240;
+            border-radius: 8px;
+            border-left: 3px solid #233554;
+            transition: all 0.3s;
+        }
+        .level-item:hover { border-left-color: #64ffda; background: #172a45; }
+        
+        .level-number {
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #0a192f;
+            color: #64ffda;
+            border: 1px solid #64ffda;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* SENTINEL ALERT */
+        .sentinel-widget {
+            border: 1px solid #f59e0b;
+            position: relative;
+            overflow: hidden;
+        }
+        .sentinel-header {
+            background: rgba(239, 68, 68, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .alert-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse-red 1s infinite; margin-right: 8px; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* XAI BARS */
+        .xai-row { margin-bottom: 8px; display: flex; align-items: center; font-size: 12px; }
+        .xai-label { width: 120px; }
+        .xai-bar-bg { flex: 1; height: 6px; background: #233554; border-radius: 3px; overflow: hidden; }
+        .xai-bar-fill { height: 100%; border-radius: 3px; }
+        .xai-val { width: 50px; text-align: right; font-family: monospace; }
+
+        /* AUDIT TABLE */
+        .audit-container { height: 250px; overflow: hidden; position: relative; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 10px; color: #64ffda; border-bottom: 1px solid #233554; }
+        td { padding: 8px 10px; border-bottom: 1px solid #112240; color: #8892b0; }
+        tr:hover td { color: #e6f1ff; background: rgba(100, 255, 218, 0.05); }
+        
+        .table-row-enter { animation: slideIn 0.5s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* CTA BUTTON */
+        .btn-cta {
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: opacity 0.2s;
+        }
+        .btn-cta:hover { opacity: 0.9; }
+
+        /* FOOTER */
+        footer {
+            margin-top: auto;
+            border-top: 1px solid #233554;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        .compliance-badges span {
+            background: #112240;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            border: 1px solid #233554;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">AgenticX5 <span style="font-weight:300; color:#8892b0; font-size:16px;">| Global Standard</span></div>
+        
+        <nav class="nav-tabs">
+            <a href="index.html" class="nav-link">🏠 Hub</a>
+            <a href="dashboard-global-standalone.html" class="nav-link active">🌐 Global</a>
+            <a href="safezone-detection-standalone.html" class="nav-link">🛡️ SafeZone</a>
+            <a href="generateur-plans-cnesst-standalone.html" class="nav-link">📋 Plans</a>
+            <a href="formation-vr-standalone.html" class="nav-link">🎓 Formation</a>
+            <a href="simulateur-roi-standalone.html" class="nav-link">💰 ROI</a>
+        </nav>
+
+        <div class="badge-live">
+            <div class="pulse"></div>
+            SYSTÈME LIVE
+        </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <main>
+        <!-- LEFT: ARCHITECTURE -->
+        <aside class="sidebar">
+            <h3 style="color:#e6f1ff; margin-bottom:20px; font-size:14px; text-transform:uppercase;">Architecture Neuronale</h3>
+            
+            <div class="level-item">
+                <div class="level-number">01</div>
+                <h4 class="text-white">Collecte Multi-Sources</h4>
+                <p style="font-size:12px; margin-top:5px;">IoT, Caméras 4K, Capteurs Biométriques</p>
+            </div>
+
+            <div class="level-item">
+                <div class="level-number">02</div>
+                <h4 class="text-white">Intégration & Normalisation</h4>
+                <p style="font-size:12px; margin-top:5px;">Nettoyage de données, Structuration SQL</p>
+            </div>
+
+            <div class="level-item">
+                <div class="level-number">03</div>
+                <h4 class="text-white">Enrichissement Sémantique</h4>
+                <p style="font-size:12px; margin-top:5px;">Knowledge Graph Contextuel</p>
+            </div>
+
+            <div class="level-item" style="border-left-color: #f59e0b;">
+                <div class="level-number" style="border-color:#f59e0b; color:#f59e0b;">04</div>
+                <h4 class="text-white">Intelligence & Prédiction</h4>
+                <p style="font-size:12px; margin-top:5px;">Moteurs IA, Modélisation Risque</p>
+            </div>
+
+            <div class="level-item">
+                <div class="level-number">05</div>
+                <h4 class="text-white">Orchestration</h4>
+                <p style="font-size:12px; margin-top:5px;">Agent Hugo, Actions Automatisées</p>
+            </div>
+        </aside>
+
+        <!-- RIGHT: DASHBOARD CONTENT -->
+        <div class="content">
+            <!-- TOP METRICS -->
+            <div class="metrics-grid">
+                <div class="card">
+                    <div class="metric-label">Autonomie Ops.</div>
+                    <div class="metric-value text-accent">97.8%</div>
+                </div>
+                <div class="card">
+                    <div class="metric-label">Temps Stabilisation</div>
+                    <div class="metric-value text-white">2.8s</div>
+                </div>
+                <div class="card">
+                    <div class="metric-label">Précision Décision</div>
+                    <div class="metric-value text-accent">99.2%</div>
+                </div>
+                <div class="card">
+                    <div class="metric-label">Précision Prédictive</div>
+                    <div class="metric-value text-warning">94.3%</div>
+                </div>
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1.5fr 1fr; gap:20px;">
+                <!-- AUDIT TRAIL -->
+                <div class="card audit-container">
+                    <h3 style="color:#e6f1ff; margin-bottom:15px; font-size:14px;">BLOCKCHAIN AUDIT TRAIL</h3>
+                    <table id="auditTable">
+                        <thead>
+                            <tr>
+                                <th>TIMESTAMP</th>
+                                <th>ACTION</th>
+                                <th>ACTEUR</th>
+                                <th>HASH</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- JS Generated -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- SENTINEL WIDGET -->
+                <div class="card sentinel-widget">
+                    <div class="sentinel-header">
+                        <div style="display:flex; align-items:center;">
+                            <div class="alert-dot"></div>
+                            <span class="text-alert" style="font-weight:700; font-size:12px;">ALERTE SENTINELLE</span>
+                        </div>
+                        <span class="font-mono text-alert">#WRN-A12-99</span>
+                    </div>
+                    <div style="padding:15px;">
+                        <h3 class="text-white" style="font-size:16px; margin-bottom:5px;">Risque Élevé - Zone Fab. A12</h3>
+                        <p style="font-size:12px; margin-bottom:15px;">Déviation thermique anormale. Risque condensation.</p>
+                        
+                        <div class="flex" style="justify-content:space-between; margin-bottom:15px;">
+                            <div>
+                                <div style="font-size:10px; color:#8892b0;">ANTICIPATION</div>
+                                <div class="text-warning" style="font-weight:700;">8.7 Heures</div>
+                            </div>
+                            <div>
+                                <div style="font-size:10px; color:#8892b0;">PROBABILITÉ</div>
+                                <div class="text-alert" style="font-weight:700;">89.5%</div>
+                            </div>
+                        </div>
+
+                        <!-- XAI -->
+                        <div style="background:#0a192f; padding:10px; border-radius:4px;">
+                            <div style="font-size:10px; color:#64ffda; margin-bottom:5px;">XAI EXPLICABILITÉ (SHAP)</div>
+                            
+                            <div class="xai-row">
+                                <span class="xai-label">Temp. Amb.</span>
+                                <div class="xai-bar-bg"><div class="xai-bar-fill" style="width:85%; background:#ef4444;"></div></div>
+                                <span class="xai-val">+0.38</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Humidité Rel.</span>
+                                <div class="xai-bar-bg"><div class="xai-bar-fill" style="width:55%; background:#ef4444;"></div></div>
+                                <span class="xai-val">+0.21</span>
+                            </div>
+                            <div class="xai-row">
+                                <span class="xai-label">Heure</span>
+                                <div class="xai-bar-bg"><div class="xai-bar-fill" style="width:35%; background:#f59e0b;"></div></div>
+                                <span class="xai-val">+0.15</span>
+                            </div>
+                        </div>
+
+                        <button class="btn-cta">DÉCLENCHER PROTOCOLE PRÉVENTIF</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EFFICIENCY TABLE -->
+            <div class="card" style="margin-top:20px;">
+                <h3 style="color:#e6f1ff; margin-bottom:10px; font-size:14px;">GAINS D'EFFICIENCE COMPARATIFS</h3>
+                <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap:10px; font-size:13px;">
+                    <div style="background:#0a192f; padding:10px; border:1px solid #233554; border-radius:4px;">
+                        <div style="color:#8892b0;">Enquête Incident</div>
+                        <div style="color:#e6f1ff; font-weight:bold;">6h <span style="color:#64ffda;">→ 1h</span></div>
+                    </div>
+                    <div style="background:#0a192f; padding:10px; border:1px solid #233554; border-radius:4px;">
+                        <div style="color:#8892b0;">Pack Évidence</div>
+                        <div style="color:#e6f1ff; font-weight:bold;">3 sem. <span style="color:#64ffda;">→ 15 min</span></div>
+                    </div>
+                    <div style="background:#0a192f; padding:10px; border:1px solid #233554; border-radius:4px;">
+                        <div style="color:#8892b0;">Veille Réglementaire</div>
+                        <div style="color:#e6f1ff; font-weight:bold;">Manuel <span style="color:#64ffda;">→ Temps Réel</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="compliance-badges">
+            <span>ISO 45001</span>
+            <span>ISO 27001</span>
+            <span>EU AI ACT</span>
+            <span>GDPR</span>
+            <span style="border-color:#64ffda; color:#64ffda;">LOI 25 QC</span>
+        </div>
+        <div>
+            Primauté de la vie • HITL Obligatoire • Certifié C-25
+        </div>
+        <button style="background:transparent; border:1px solid #64ffda; color:#64ffda; padding:5px 15px; border-radius:4px; cursor:pointer;">
+            Diagnostic RMPPÉ
+        </button>
+    </footer>
+
+    <script>
+        // AUDIT TRAIL SIMULATION
+        const actions = ['DATA_INGEST', 'NORMALIZE', 'PREDICTION', 'DECISION_AUTO', 'COMPLIANCE_CHECK'];
+        const actors = ['Agent_Collect_04', 'Model_Sentinel_v5', 'Agent_Hugo', 'System_Core', 'Sensor_IoT_88'];
+        const tbody = document.querySelector('#auditTable tbody');
+
+        function generateHash() {
+            return '0x' + Array(16).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+
+        function addRow() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('fr-CA');
+            const action = actions[Math.floor(Math.random() * actions.length)];
+            const actor = actors[Math.floor(Math.random() * actors.length)];
+            const hash = generateHash();
+
+            const tr = document.createElement('tr');
+            tr.className = 'table-row-enter';
+            tr.innerHTML = `
+                <td class="font-mono text-accent">${time}</td>
+                <td style="font-weight:600;">${action}</td>
+                <td>${actor}</td>
+                <td class="font-mono" style="font-size:11px;">${hash}... <span style="color:#10b981">✔</span></td>
+            `;
+
+            tbody.prepend(tr);
+            if(tbody.children.length > 5) {
+                tbody.removeChild(tbody.lastChild);
+            }
+        }
+
+        // Init rows
+        for(let i=0; i<5; i++) addRow();
+        
+        // Loop
+        setInterval(addRow, 3500);
+    </script>
+</body>
+</html>

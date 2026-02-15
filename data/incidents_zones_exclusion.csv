@@ -1,0 +1,13 @@
+scian_code,incident_type,jurisdiction,annual_frequency,avg_cost_cad,avg_severity_days,fatality_rate,cause_1,cause_1_pct,cause_2,cause_2_pct,cause_3,cause_3_pct,equipment,distance_violation_m,cnesst_ref,osha_standard,csa_standard
+31-33,forklift_pedestrian_collision,QC,2.3,247000,42,4.5,Angle mort opérateur,45,Vitesse excessive >12 kmh,28,Absence signalisation sonore,15,"Forklift,Pedestrian",2.8,Guide CNESST 2026 p.12,1910.178(n)(7),CSA B335-15
+31-33,loading_zone_intrusion,QC,5.7,184000,38,2.1,Absence périmètre 6m,52,Communication défaillante,31,Conducteur non formé,10,"Trailer,Forklift,Person",3.2,Guide CNESST 2026 Annexe 2-3,1910.176(c),CSA Z150-16
+31-33,forklift_overturn,QC,1.8,312000,56,12.4,Surcharge capacité,48,Surface inégale/rampe,35,Vitesse virage excessive,17,Forklift,0,RSST art.256-265,1910.178(o),CSA B335-15
+48-49,loading_dock_fall,QC,4.2,156000,35,1.8,Absence pont nivellement,52,Remorque non calée,28,Éclairage insuffisant,20,"Dock,Trailer",1.4,Guide CNESST 2026 p.8,1910.176(b),CSA Z150-16
+48-49,trailer_separation,QC,0.8,890000,180,78.0,Remorque non calée/bloquée,68,Chariot élévateur pousse trop fort,22,Absence communication,10,"Trailer,Forklift",0,Guide CNESST 2026 p.15,1910.176(c),CSA Z150-16
+48-49,vehicle_pedestrian_reversing,QC,3.5,198000,41,3.2,Absence signaleur,48,Caméra recul défectueuse,31,Alarme recul inaudible,21,"Truck,Pedestrian",2.1,RSST art.256-265,1926.602(a)(9),CSA D250-22
+23,material_delivery_uncontrolled,QC,3.8,198000,44,2.8,Absence signaleur,48,Zone livraison non définie,35,Camion recule sans surveillance,17,"Truck,Material",3.5,Code sécurité construction,1926.602,CSA Z150-16
+23,crane_exclusion_intrusion,QC,2.1,425000,67,8.9,Périmètre non balisé,58,Absence surveillance périmètre,27,Charge oscillante,15,"Crane,Load,Person",4.8,Code sécurité construction art.3.14,1926.550(a)(15),CSA Z150-16
+23,excavation_zone_collapse,QC,1.2,567000,89,15.3,Absence étaiement,62,Sol instable non évalué,28,Proximité équipement lourd,10,"Excavator,Shoring",0,Code sécurité construction art.3.15,1926.652,CSA Z150-16
+62,patient_transfer_collision,QC,1.9,167000,32,0.8,Zone transfert non balisée,45,Chariot médical proximité,35,Communication défaillante,20,"Medical cart,Patient bed",2.5,ASSTSAS guide PDSB,OSHA Bloodborne,CSA Z317.2
+62,medical_delivery_zone,QC,2.4,143000,28,0.5,Absence périmètre livraison,52,Livraison heure pointe,31,Couloir encombré,17,"Medical supplies,Cart",1.8,MSSS directives,OSHA 1910.22,CSA Z317.2
+44-45,stockroom_forklift,QC,3.2,167000,35,1.2,Allée trop étroite <3m,45,Visibilité réduite,32,Absence miroir angle,23,"Forklift,Shelving",2.2,RSST art.256-265,1910.178(n),CSA B335-15

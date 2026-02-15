@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgenticX5 - Suite Complète HSE</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+            color: #e6f1ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.05;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, #64ffda 0%, transparent 70%);
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(100px, -100px); }
+            50% { transform: translate(-100px, 100px); }
+            75% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo-large {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #64ffda, #0EA5E9, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            letter-spacing: -2px;
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #8892b0;
+            margin-bottom: 12px;
+        }
+
+        .version {
+            font-size: 14px;
+            color: #475569;
+            font-family: 'Courier New', monospace;
+        }
+
+        .badge-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 16px;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            margin-bottom: 60px;
+        }
+
+        .module-card {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.05) 0%, rgba(2, 128, 144, 0.05) 100%);
+            border: 2px solid #233554;
+            border-radius: 20px;
+            padding: 32px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(100, 255, 218, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .module-card:hover::before {
+            left: 100%;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            border-color: #64ffda;
+            box-shadow: 0 20px 60px rgba(100, 255, 218, 0.2);
+        }
+
+        .module-card.global { border-color: #0EA5E9; }
+        .module-card.global:hover { border-color: #0EA5E9; box-shadow: 0 20px 60px rgba(14, 165, 233, 0.3); }
+
+        .module-card.safezone { border-color: #ef4444; }
+        .module-card.safezone:hover { border-color: #ef4444; box-shadow: 0 20px 60px rgba(239, 68, 68, 0.3); }
+
+        .module-card.plans { border-color: #8b5cf6; }
+        .module-card.plans:hover { border-color: #8b5cf6; box-shadow: 0 20px 60px rgba(139, 92, 246, 0.3); }
+
+        .module-card.formation { border-color: #a78bfa; }
+        .module-card.formation:hover { border-color: #a78bfa; box-shadow: 0 20px 60px rgba(167, 139, 250, 0.3); }
+
+        .module-card.roi { border-color: #10b981; }
+        .module-card.roi:hover { border-color: #10b981; box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3); }
+
+        .module-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .module-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #e6f1ff;
+        }
+
+        .module-desc {
+            font-size: 14px;
+            color: #8892b0;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .module-features {
+            list-style: none;
+            padding: 0;
+            margin-top: 16px;
+        }
+
+        .module-features li {
+            font-size: 13px;
+            color: #64ffda;
+            padding: 6px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .module-features li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #64ffda;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid #233554;
+        }
+
+        .compliance-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64ffda;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .logo-large {
+                font-size: 48px;
+            }
+            .tagline {
+                font-size: 18px;
+            }
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-animation">
+        <div class="circle" style="width: 300px; height: 300px; top: 10%; left: 5%;"></div>
+        <div class="circle" style="width: 200px; height: 200px; top: 60%; right: 10%; animation-delay: 5s;"></div>
+        <div class="circle" style="width: 250px; height: 250px; bottom: 15%; left: 50%; animation-delay: 10s;"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo-large">AGENTICX5</div>
+            <div class="tagline">Suite Complète Gestion HSE Intelligente</div>
+            <div class="version">v1.0.0 • Production Ready • CSS Standalone</div>
+            <div class="badge-live">
+                <div class="pulse-dot"></div>
+                <span style="color: #10b981; font-weight: 600; font-size: 14px;">6 MODULES OPÉRATIONNELS</span>
+            </div>
+        </div>
+
+        <div class="modules-grid">
+            <!-- Module 1: Dashboard Global -->
+            <a href="dashboard-global-standalone.html" class="module-card global">
+                <span class="module-icon">🌐</span>
+                <div class="module-title">Dashboard Global</div>
+                <div class="module-desc">
+                    Vue d'ensemble multi-standards avec architecture 5 niveaux, alertes sentinelles XAI et audit trail blockchain.
+                </div>
+                <ul class="module-features">
+                    <li>Architecture neuronale 5 niveaux</li>
+                    <li>Métriques temps réel (97.8% autonomie)</li>
+                    <li>Alertes sentinelles + XAI SHAP</li>
+                    <li>Blockchain audit trail immuable</li>
+                    <li>Gains efficience comparatifs</li>
+                </ul>
+            </a>
+
+            <!-- Module 2: SafeZone Detection -->
+            <div class="module-card safezone" style="cursor: default;">
+                <span class="module-icon">🛡️</span>
+                <div class="module-title">SafeZone Detection</div>
+                <div class="module-desc">
+                    Détection temps réel intrusions zones exclusion avec stop-work automatisé. Disponible en 2 versions.
+                </div>
+                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+                    <a href="safezone-detection-standalone.html" style="text-decoration: none; background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; padding: 12px; border-radius: 8px; color: #3b82f6; font-weight: 600; transition: all 0.2s; display: block; text-align: center;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'">
+                        📊 Version 2D Canvas (Démo Rapide)
+                    </a>
+                    <a href="safezone-3d-twin.html" style="text-decoration: none; background: linear-gradient(90deg, #ef4444, #dc2626); border: none; padding: 14px; border-radius: 8px; color: white; font-weight: 700; transition: all 0.2s; display: block; text-align: center; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(239, 68, 68, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 5px 15px rgba(239, 68, 68, 0.3)'">
+                        🗺️ Version 3D Jumeau Numérique ⭐ NOUVEAU
+                    </a>
+                </div>
+                <ul class="module-features" style="margin-top: 16px;">
+                    <li>Géolocalisation GPS temps réel</li>
+                    <li>Calculs spatiaux 3D (Three.js)</li>
+                    <li>Carte interactive + Heatmap risques</li>
+                    <li>4 agents: Geofence, LoneWorker, Fleet</li>
+                    <li>Playback historique 24h</li>
+                </ul>
+            </div>
+
+            <!-- Module 3: Générateur Plans -->
+            <a href="generateur-plans-cnesst-standalone.html" class="module-card plans">
+                <span class="module-icon">📋</span>
+                <div class="module-title">Générateur Plans CNESST</div>
+                <div class="module-desc">
+                    Génération automatique plans de chargement conformes Guide CNESST février 2026 (Annexe 2-3).
+                </div>
+                <ul class="module-features">
+                    <li>5 types cargaison supportés</li>
+                    <li>Calculs automatiques (périmètre, cônes)</li>
+                    <li>9 sections conformes CNESST</li>
+                    <li>Diagramme zones visualisé (Canvas)</li>
+                    <li>Export PDF + copie presse-papiers</li>
+                </ul>
+            </a>
+
+            <!-- Module 4: Formation VR -->
+            <a href="formation-vr-standalone.html" class="module-card formation">
+                <span class="module-icon">🎓</span>
+                <div class="module-title">Formation VR</div>
+                <div class="module-desc">
+                    Simulation immersive zones d'exclusion avec 3 scénarios (Débutant, Intermédiaire, Avancé).
+                </div>
+                <ul class="module-features">
+                    <li>3 scénarios progressifs (10-30 min)</li>
+                    <li>Viewport VR simulation interactive</li>
+                    <li>Scoring + certification (80% requis)</li>
+                    <li>Checklist 4 étapes validation</li>
+                    <li>Certificat PDF téléchargeable</li>
+                </ul>
+            </a>
+
+            <!-- Module 5: Simulateur ROI -->
+            <a href="simulateur-roi-standalone.html" class="module-card roi">
+                <span class="module-icon">💰</span>
+                <div class="module-title">Simulateur ROI</div>
+                <div class="module-desc">
+                    Calcul interactif retour sur investissement avec projections 1-5 ans et vies sauvées estimées.
+                </div>
+                <ul class="module-features">
+                    <li>5 sliders paramétrables (sites, accidents, coûts)</li>
+                    <li>Calculs temps réel ROI + payback</li>
+                    <li>Graphique barres cumulatives (Canvas)</li>
+                    <li>Estimation vies sauvées (impact humain)</li>
+                    <li>Projections conservatrices auditables</li>
+                </ul>
+            </a>
+        </div>
+
+        <div class="footer">
+            <div class="compliance-badges">
+                <div class="badge">✓ ISO 45001</div>
+                <div class="badge">✓ ISO 42001</div>
+                <div class="badge">✓ ISO 27001</div>
+                <div class="badge">✓ EU AI ACT</div>
+                <div class="badge">✓ GDPR</div>
+                <div class="badge">✓ LOI 25 QC</div>
+                <div class="badge">✓ CNESST 2026</div>
+            </div>
+
+            <div class="footer-text">
+                <strong style="color: #64ffda;">Primauté de la vie</strong> • Human-In-The-Loop Obligatoire • Certifié C-25
+            </div>
+
+            <a href="/cdn-cgi/l/email-protection#93f0fcfde7f2f0e7d3f2f4f6fde7faf0eba6bdf0fcfe" class="cta-button">
+                📧 Demander une Démo Personnalisée
+            </a>
+
+            <div style="margin-top: 32px; font-size: 12px; color: #475569;">
+                © 2026 AgenticX5 • GenAISafety × Preventera × SquadrAI Hugo<br>
+                Suite Complète CSS Standalone • Zéro Dépendances Externes • Production Ready
+            </div>

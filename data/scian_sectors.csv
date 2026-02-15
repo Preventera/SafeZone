@@ -1,0 +1,13 @@
+scian_code,name_fr,name_en,injuries_2023,injuries_pct,tms_pct,psy_pct,trend_7y,forklift_pct,zone_intrusion_pct,loading_dock_pct,avg_cost_cad,source
+62,Santé et assistance sociale,Health care and social assistance,34944,30.6,20.5,6.7,94.0,2,3,4,156000,CNESST_2023
+31-33D,Fabrication biens durables,Manufacturing durable goods,10547,9.2,28.5,0.7,-6.6,12,5,7,247000,CNESST_2023
+23,Construction,Construction,9590,8.4,25.8,0.7,16.5,6,4,8,198000,CNESST_2023
+31-33N,Fabrication non durables,Manufacturing non-durable goods,7540,6.6,34.3,0.8,-12.1,11,4,6,221000,CNESST_2023
+44-45,Commerce de détail,Retail trade,7266,6.4,33.3,2.2,-10.5,8,3,9,167000,CNESST_2023
+48-49,Transport et entreposage,Transportation and warehousing,5739,5.0,24.6,6.9,-8.1,13,9,18,184000,CNESST_2023
+91,Administrations publiques,Public administration,5614,4.9,19.4,8.4,18.2,3,2,5,143000,CNESST_2023
+72,Hébergement et restauration,Accommodation and food services,4508,3.9,28.7,1.9,-5.3,5,2,7,129000,CNESST_2023
+56,Services administratifs,Administrative services,3876,3.4,30.2,2.1,8.7,7,4,6,151000,CNESST_2023
+61,Services d'enseignement,Educational services,3421,3.0,22.1,7.8,42.0,2,1,3,138000,CNESST_2023
+21,Extraction minière,Mining and extraction,2156,1.9,31.2,1.2,5.4,9,7,8,278000,CNESST_2023
+11,Agriculture et foresterie,Agriculture and forestry,1847,1.6,29.8,0.9,3.2,11,6,12,192000,CNESST_2023

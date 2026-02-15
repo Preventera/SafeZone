@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur Plans Chargement CNESST</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1f2937;
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .generated-plan {
+            display: none;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .generated-plan.visible {
+            display: block;
+        }
+
+        .plan-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .plan-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .plan-ref {
+            font-size: 14px;
+            opacity: 0.9;
+            font-family: 'Courier New', monospace;
+        }
+
+        .plan-section {
+            margin-bottom: 24px;
+        }
+
+        .plan-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .plan-content {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .plan-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .plan-list li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+
+        .plan-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        .step-list {
+            counter-reset: step;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .step-list li {
+            counter-increment: step;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-list li::before {
+            content: counter(step);
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+
+        .diagram {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .diagram canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .compliance-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #10b981;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .copy-button {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .copy-button:hover {
+            box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 GÉNÉRATEUR PLANS CHARGEMENT CNESST</h1>
+            <div class="subtitle">Conforme Guide CNESST Février 2026 • Annexe 2-3 • ISO 45001</div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Form -->
+            <div class="card">
+                <h2>⚙️ Paramètres du Plan</h2>
+                
+                <div class="form-group">
+                    <label for="cargo">Type de cargaison</label>
+                    <select id="cargo">
+                        <option value="bois">Paquets de bois (1000 kg)</option>
+                        <option value="tuyaux">Tuyaux métalliques (500 kg)</option>
+                        <option value="palettes">Palettes chargées (800 kg)</option>
+                        <option value="acier">Poutres d'acier (1500 kg)</option>
+                        <option value="conteneurs">Conteneurs (2000 kg)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantité (unités)</label>
+                    <input type="number" id="quantity" value="6" min="1" max="20">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipment">Équipement de manutention</label>
+                    <select id="equipment">
+                        <option value="chariot">Chariot élévateur</option>
+                        <option value="chargeuse">Chargeuse sur roues</option>
+                        <option value="grue">Grue mobile</option>
+                        <option value="pince">Chariot à pince</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Lieu de chargement</label>
+                    <select id="location">
+                        <option value="cour">Cour d'usine</option>
+                        <option value="entrepot">Entrepôt couvert</option>
+                        <option value="chantier">Chantier de construction</option>
+                        <option value="bordure">Bordure de route</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="personnel">Nom du personnel</label>
+                    <input type="text" id="personnel" placeholder="Ex: Jean Tremblay">
+                </div>
+
+                <button onclick="generatePlan()">🚀 Générer le Plan CNESST</button>
+            </div>
+
+            <!-- Plan Generated -->
+            <div class="card">
+                <h2>📄 Plan Généré</h2>
+                <div id="generatedPlan" class="generated-plan">
+                    <!-- Plan will be inserted here -->
+                </div>
+                <div id="placeholder" style="text-align: center; padding: 60px 20px; color: #9ca3af;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                    <div style="font-size: 16px;">Remplissez le formulaire et cliquez sur "Générer"</div>
+                    <div style="font-size: 14px; margin-top: 8px;">Le plan conforme CNESST apparaîtra ici</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generatePlan() {
+            const cargo = document.getElementById('cargo').value;
+            const quantity = document.getElementById('quantity').value;
+            const equipment = document.getElementById('equipment').value;
+            const location = document.getElementById('location').value;
+            const personnel = document.getElementById('personnel').value || 'À compléter';
+
+            const cargoData = {
+                bois: { name: 'Paquets de bois', weight: 1000, dim: '2.4m × 1.2m × 0.8m' },
+                tuyaux: { name: 'Tuyaux métalliques', weight: 500, dim: '6m × 0.3m ⌀' },
+                palettes: { name: 'Palettes chargées', weight: 800, dim: '1.2m × 1.0m × 1.5m' },
+                acier: { name: 'Poutres d\'acier', weight: 1500, dim: '12m × 0.4m × 0.3m' },
+                conteneurs: { name: 'Conteneurs', weight: 2000, dim: '6m × 2.4m × 2.6m' }
+            };
+
+            const equipmentData = {
+                chariot: { name: 'Chariot élévateur', capacity: '3000 kg' },
+                chargeuse: { name: 'Chargeuse sur roues', capacity: '5000 kg' },
+                grue: { name: 'Grue mobile', capacity: '10000 kg' },
+                pince: { name: 'Chariot à pince', capacity: '4000 kg' }
+            };
+
+            const locationData = {
+                cour: 'Cour d\'usine - Surface asphaltée',
+                entrepot: 'Entrepôt couvert - Plancher béton',
+                chantier: 'Chantier de construction - Zone délimitée',
+                bordure: 'Bordure de route - Accotement stabilisé'
+            };
+
+            const date = new Date().toLocaleDateString('fr-CA');
+            const ref = 'PLAN-' + Date.now().toString().slice(-6);
+            const totalWeight = cargoData[cargo].weight * quantity;
+            const zonePerimeter = Math.ceil(quantity / 2) + 6;
+            const cones = Math.ceil(zonePerimeter * 3.14 / 3);
+
+            const plan = `
+                <div class="plan-header">
+                    <div class="plan-title">Plan de Chargement Sécurisé</div>
+                    <div class="plan-ref">Référence: ${ref} • Date: ${date}</div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>1. Identification</h3>
+                    <div class="plan-content">
+                        <strong>Responsable:</strong> ${personnel}<br>
+                        <strong>Date d'exécution:</strong> ${date}<br>
+                        <strong>Révision:</strong> v1.0
+                    </div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>2. Cargaison</h3>
+                    <div class="plan-content">
+                        <strong>Type:</strong> ${cargoData[cargo].name}<br>
+                        <strong>Quantité:</strong> ${quantity} unités<br>
+                        <strong>Poids unitaire:</strong> ${cargoData[cargo].weight} kg<br>
+                        <strong>Poids total:</strong> ${totalWeight} kg<br>
+                        <strong>Dimensions:</strong> ${cargoData[cargo].dim}
+                    </div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>3. Équipement & Personnel</h3>
+                    <div class="plan-content">
+                        <strong>Appareil:</strong> ${equipmentData[equipment].name}<br>
+                        <strong>Capacité:</strong> ${equipmentData[equipment].capacity}<br>
+                        <strong>Opérateur certifié:</strong> Oui (requis)<br>
+                        <strong>Conducteur remorque:</strong> Formation requise
+                    </div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>4. Lieu & Conditions</h3>
+                    <div class="plan-content">
+                        <strong>Emplacement:</strong> ${locationData[location]}<br>
+                        <strong>Conditions météo:</strong> Vérifier avant manœuvre<br>
+                        <strong>Visibilité:</strong> Bonne luminosité requise
+                    </div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>5. Zone d'Exclusion (Guide CNESST p.12)</h3>
+                    <div class="plan-content">
+                        <strong>Périmètre:</strong> ${zonePerimeter} mètres autour remorque<br>
+                        <strong>Délimitation:</strong> ${cones} cônes oranges + ruban<br>
+                        <strong>Zone d'attente:</strong> Minimum 15 mètres de la zone<br>
+                        <strong>Accès interdit:</strong> Sauf opérateur autorisé
+                    </div>
+                </div>
+
+                <div class="plan-section">
+                    <h3>6. Communication (CNESST p.17)</h3>
+                    <ul class="plan-list">
+                        <li>Formation conducteur (10 min): procédures, signaux, risques</li>
+                        <li>Radio VHF canal 5 (opérateur ↔ superviseur)</li>
+                        <li>Signal sonore: 3 bips courts = début manœuvre</li>
+                    </ul>
+                </div>
+
+                <div class="plan-section">
+                    <h3>7. Étapes Séquentielles (Annexe 2)</h3>
+                    <ol class="step-list">
+                        <li><strong>Superviseur:</strong> Vérifier conditions météo et sol</li>
+                        <li><strong>Superviseur:</strong> Installer cônes et zone d'exclusion</li>
+                        <li><strong>Opérateur:</strong> Inspecter équipement (checklist)</li>
+                        <li><strong>Conducteur:</strong> Positionner remorque, frein de stationnement</li>
+                        <li><strong>Superviseur:</strong> Confirmer zone dégagée (radio)</li>
+                        <li><strong>Opérateur:</strong> Signal 3 bips, débuter chargement</li>
+                        <li><strong>Opérateur:</strong> Charger ${quantity} unités (ordre stable)</li>
+                        <li><strong>Opérateur:</strong> Signal fin manœuvre, retrait zone</li>
+                    </ol>
+                </div>
+
+                <div class="plan-section">
+                    <h3>8. Dispositifs Arrimage (CNESST p.23)</h3>
+                    <ul class="plan-list">
+                        <li>Sangles d'arrimage: ${Math.ceil(quantity / 2)} × 5000 kg</li>
+                        <li>Supports anti-dérapants sous cargaison</li>
+                        <li>Veste haute visibilité classe 2 (opérateur)</li>
+                        ${location === 'chantier' ? '<li>Casque de sécurité CSA Z94.1</li>' : ''}
+                    </ul>
+                </div>
+
+                <div class="plan-section">
+                    <h3>9. Conformité Réglementaire</h3>
+                    <div class="compliance-badges">
+                        <span class="badge">✓ CNESST Guide 2026</span>
+                        <span class="badge">✓ ISO 45001</span>
+                        <span class="badge">✓ RSST Art.324</span>
+                        <span class="badge">✓ Loi 25</span>
+                    </div>
+                </div>
+
+                <div class="diagram">
+                    <canvas id="diagramCanvas" width="400" height="300"></canvas>
+                </div>
+
+                <button class="copy-button" onclick="copyPlan()">📋 Copier le Plan</button>
+            `;
+
+            document.getElementById('generatedPlan').innerHTML = plan;
+            document.getElementById('generatedPlan').classList.add('visible');
+            document.getElementById('placeholder').style.display = 'none';
+
+            // Draw diagram
+            setTimeout(() => {
+                const canvas = document.getElementById('diagramCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Background
+                ctx.fillStyle = '#f9fafb';
+                ctx.fillRect(0, 0, 400, 300);
+
+                // Truck
+                ctx.fillStyle = '#667eea';
+                ctx.fillRect(150, 120, 100, 60);
+                ctx.fillStyle = 'white';
+                ctx.font = '12px sans-serif';
+                ctx.fillText('REMORQUE', 165, 155);
+
+                // Exclusion zone
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 5]);
+                ctx.beginPath();
+                ctx.arc(200, 150, 80, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Cones
+                for (let i = 0; i < 8; i++) {
+                    const angle = (Math.PI * 2 / 8) * i;
+                    const x = 200 + Math.cos(angle) * 80;
+                    const y = 150 + Math.sin(angle) * 80;
+                    
+                    ctx.fillStyle = '#f97316';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Cargo
+                const cargoCount = Math.min(parseInt(quantity), 6);
+                ctx.fillStyle = '#10b981';
+                for (let i = 0; i < cargoCount; i++) {
+                    const x = 160 + (i % 3) * 25;
+                    const y = 130 + Math.floor(i / 3) * 25;
+                    ctx.fillRect(x, y, 20, 20);
+                }
+
+                // Labels
+                ctx.fillStyle = '#374151';
+                ctx.font = 'bold 14px sans-serif';
+                ctx.fillText('Zone d\'exclusion', 220, 100);
+                ctx.font = '12px sans-serif';
+                ctx.fillText(zonePerimeter + 'm périmètre', 225, 120);
+            }, 100);
+        }
+
+        function copyPlan() {
+            const planText = document.getElementById('generatedPlan').innerText;
+            navigator.clipboard.writeText(planText).then(() => {
+                const btn = event.target;
+                btn.textContent = '✓ Plan copié !';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.textContent = '📋 Copier le Plan';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
